@@ -47,26 +47,26 @@ async function addContact(name, email, phone) {
   return newContact;
 }
 
-async function updateContact(id, body){
-    const contactsAll = await listContacts();
-    const index = contactsAll.findIndex((contact) => contact.id === id);
-    if (index === -1) {
-      return null;
-    }
+async function updateContact(id, body) {
+  const contactsAll = await listContacts();
+  const index = contactsAll.findIndex((contact) => contact.id === id);
+  if (index === -1) {
+    return null;
+  }
 
-    contactsAll[index] = {
-      ...contactsAll[index],
-      ...body,
-    };
-  
-    await writeContacts(contactsAll);
-    return contactsAll[index];
+  contactsAll[index] = {
+    ...contactsAll[index],
+    ...body,
+  };
+
+  await writeContacts(contactsAll);
+  return contactsAll[index];
 }
 
 module.exports = {
-    listContacts,
-    getContactById,
-    removeContact,
-    addContact,
-    updateContact
-  };
+  listContacts,
+  getContactById,
+  removeContact,
+  addContact,
+  updateContact,
+};
