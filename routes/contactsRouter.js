@@ -6,11 +6,9 @@ const contactsController = require("../controllers/contactsControllers.js");
 const validateBody = require("../helpers/validateBody.js");
 const schemas = require("../schemas/contactsSchemas.js");
 
-contactsRouter.get("/", contactsController.getAllContacts);
+contactsRouter.get("/", getAllContacts);
 
-contactsRouter.get("/:contactId", contactsController.getOneContact);
-
-contactsRouter.delete("/:contactId", contactsController.deleteContact);
+contactsRouter.get("/:id", getOneContact);
 
 contactsRouter.post(
   "/",
@@ -24,4 +22,5 @@ contactsRouter.put(
   contactsController.updateContact
 );
 
-module.exports = contactsRouter;
+
+export default contactsRouter;
