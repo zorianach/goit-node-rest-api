@@ -1,7 +1,7 @@
-import { Schema, model } from "mongoose";
+import mongoose from "mongoose";
 import Joi from "joi";
 
-const contactSchema = new Schema({
+const contactSchema = new mongoose.Schema({
     name: {
         type: String,
         required: [true, 'Set name for contact'],
@@ -32,6 +32,10 @@ export const createContactSchema = Joi.object({
     phone: Joi.string()
     .required()
     .messages({'any.required': "Field 'phone' is missing"}),
+    favorite: Joi.boolean()
+    .required()
+    .messages({'any.required': "Field 'favorite' is missing"}),
+
 });
 
 export const updateContactSchema = Joi.object({
@@ -40,12 +44,12 @@ export const updateContactSchema = Joi.object({
     .max(40),
     email: Joi.string()
     .email(),
-    phone: Joi.string()
-})
+    phone: Joi.string(),
+    favorite: Joi.boolean()
+});
 
-export default {
-    createContactSchema,
-    updateContactSchema
-};
+export const updateStatusSchema = Joi.object({
+    favorite: Joi.boolean().required()
+});
 
-export const Contact = model('contact', contactSchema);
+export default mongoose.model("Contact", contactSchema);

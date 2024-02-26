@@ -4,6 +4,8 @@ import validateBody from '../helpers/validateBody.js';
 import schemas from '../schemas/contactsSchemas.js';
 
 const contactsRouter = express.Router();
+const jsonParser = express.json();
+
 
 contactsRouter.get("/", contactsController.getAllContacts);
 
@@ -12,15 +14,16 @@ contactsRouter.get("/:contactId", contactsController.getOneContact);
 contactsRouter.delete("/:contactId", contactsController.deleteContact);
 
 contactsRouter.post(
-  "/",
-  validateBody(schemas.createContactSchema),
+  "/", jsonParser,
   contactsController.createContact
 );
 
 contactsRouter.put(
   "/:contactId",
-  validateBody(schemas.updateContactSchema),
+  jsonParser,
   contactsController.updateContact
 );
+
+contactsRouter.patch("/:contactId/favorite", contactsController.updateStatusContact);
 
 export default contactsRouter;
