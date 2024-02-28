@@ -3,6 +3,7 @@ import contactsController from "../controllers/contactsControllers.js";
 import validateBody from '../helpers/validateBody.js';
 import schemas from '../schemas/contactsSchemas.js';
 
+
 const contactsRouter = express.Router();
 const jsonParser = express.json();
 
@@ -25,5 +26,6 @@ contactsRouter.put(
 );
 
 contactsRouter.patch("/:contactId/favorite", contactsController.updateStatusContact);
+
 
 export default contactsRouter;
