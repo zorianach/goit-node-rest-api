@@ -3,6 +3,7 @@ import usersController from "../controllers/users.js";
 import { authenticate } from "../middleware/auth.js";
 import validateBody from "../helpers/validateBody.js";
 import { registerSchema, logInSchema, updateSubscriptionSchema } from "../schemas/userSchemas.js";
+import upload from "../middleware/upload.js";
 
 const usersRouter = express.Router();
 const jsonParser = express.json();
@@ -22,5 +23,6 @@ usersRouter.patch(
   validateBody(updateSubscriptionSchema),
   usersController.updateSubscription
 );
+usersRouter.patch("/avatars", authenticate, upload.single("avatar"), usersController.uploadAvatar)
 
 export default usersRouter;

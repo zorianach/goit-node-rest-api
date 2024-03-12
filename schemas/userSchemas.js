@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",
     },
+    avatarURL: {
+      type: String,
+      default: null,
+    }
   },
   { versionKey: false, timestamps: true }
 );
