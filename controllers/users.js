@@ -8,12 +8,14 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as gravatar from "gravatar";
 import Jimp from "jimp";
+import crypto from "node:crypto";
+import transport from "../helpers/sendEmail.js";
 
 export const register = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const avatarURL = gravatar.url(email);
-    console.log("avatarURL", avatarURL);
+    // console.log("avatarURL", avatarURL);
 
     const user = await User.findOne({ email });
 
@@ -22,12 +24,25 @@ export const register = async (req, res, next) => {
     }
 
     const hashPassword = await bcrypt.hash(password, 10);
+    const verificationToken = crypto.randomUUID();
 
     const newUser = await User.create({
       ...req.body,
       password: hashPassword,
       avatarURL,
+      verificationToken,
     });
+
+    const verificationEmail = {
+      to: email,
+      from: "zoryanamirchuk@gmail.com",
+      subject: "Welcome to Contact Book",
+      html: `To confirm your registration please click on the <a href="http://localhost:3000/api/users/verify/${verificationToken}">link</a>`,
+      text: `To confirm your registration please open the link http://localhost:3000/api/users/verify/${verificationToken}`,
+    };
+
+    await transport.sendMail(verificationEmail);
+
     res.status(201).json({
       user: {
         email: newUser.email,
@@ -40,6 +55,53 @@ export const register = async (req, res, next) => {
   }
 };
 
+const verify = async (req, res, next) => {
+  const { token } = req.params;
+//   console.log('req.params', req.params) 
+// console.log('verificationToken', verificationToken)
+  try {
+    const user = await User.findOne({ verificationToken: token });
+
+    console.log('user', user)
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+
+    await User.findByIdAndUpdate(user._id, { verify: true, verificationToken: null });
+
+    res.send({ message: "Verification successful" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const resendVerify = async (req, res) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw HttpError(404, 'User not found');
+  }
+  if (user.verify) {
+    throw HttpError(400, 'Verification has already been passed');
+  }
+
+  const verificationEmail = {
+    to: email,
+    from: "zoryanamirchuk@gmail.com",
+    subject: "Welcome to Contact Book",
+    html: `To confirm your registration please click on the <a href="http://localhost:3000/api/users/verify/${user.verificationToken}">link</a>`,
+    text: `To confirm your registration please open the link http://localhost:3000/api/users/verify/${user.verificationToken}`,
+  };
+
+  await transport.sendMail(verificationEmail);
+
+  res.json({
+    message: 'Verification email sent',
+  });
+};
+
 export const login = async (req, res, next) => {
   validateBody(schemas.logInSchema);
   try {
@@ -50,8 +112,7 @@ export const login = async (req, res, next) => {
       throw HttpError(401, "Email or password is wrong");
     }
 
-    if(user.token){
-
+    if (user.token) {
     }
 
     const passwordCompare = await bcrypt.compare(password, user.password);
@@ -122,23 +183,25 @@ const uploadAvatar = async (req, res, next) => {
     const { _id } = req.user;
 
     await Jimp.read(req.file.path)
-    .then((image) => {
-      image
-      .resize(250, 250)
-      .write(`${req.file.path}`)
-    })
-    .catch((err) => {
-      console.error(err)
-      throw HttpError(401, "Not authorized");
-    });
+      .then((image) => {
+        image.resize(250, 250).write(`${req.file.path}`);
+      })
+      .catch((err) => {
+        console.error(err);
+        throw HttpError(401, "Not authorized");
+      });
 
-    const avatarsStorage = path.join(process.cwd(), "public/avatars", req.file.filename)
+    const avatarsStorage = path.join(
+      process.cwd(),
+      "public/avatars",
+      req.file.filename
+    );
 
-   await fs.rename(req.file.path, avatarsStorage);
+    await fs.rename(req.file.path, avatarsStorage);
     // console.log("filename", req.file);
 
     const avatarURL = path.join("avatars", req.file.filename);
-// console.log('avatarURL', avatarURL)
+    // console.log('avatarURL', avatarURL)
     const user = await User.findByIdAndUpdate(
       _id,
       { avatarURL },
@@ -161,4 +224,6 @@ export default {
   getCurrent,
   updateSubscription,
   uploadAvatar,
+  verify,
+  resendVerify,
 };
